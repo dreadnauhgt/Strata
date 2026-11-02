@@ -80,6 +80,7 @@ from strata_control import gpu_roles  # noqa: E402
 from serve import ready as ready_file  # noqa: E402
 from serve import owner_guard  # noqa: E402
 from serve import launch_identity  # noqa: E402
+from serve import reuse_trace  # noqa: E402
 from serve import logit_bias as bias_api  # noqa: E402
 from serve import lifeline  # noqa: E402
 from serve.structured import StructuredOutputError, prepare_format, validated_json, extract_json  # noqa: E402
@@ -2433,6 +2434,10 @@ class StrataEngine:
                         read_to = self.reused = int(line.split()[1])
                     except (IndexError, ValueError):
                         pass
+                    if reuse_trace.enabled():            # STRATA_REUSE_TRACE=1 (opt-in): where a reuse drop starts
+                        if self.__dict__.get("reuse_trace") is None:
+                            self.reuse_trace = reuse_trace.ReuseTrace()
+                        self.reuse_trace.note(ids, self.reused)
                 elif line.startswith("DONE"):
                     self._parse_done(line)
                     done = True
